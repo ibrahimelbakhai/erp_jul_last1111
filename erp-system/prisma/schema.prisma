@@ -20,6 +20,9 @@ model Company {
   categories   Category[]
   warehouses   Warehouse[]
   products     Product[]
+  customers    Customer[]
+  salesOrders  SalesOrder[]
+  invoices     Invoice[]
 }
 
 enum UserRole {
@@ -88,6 +91,8 @@ model Product {
   category    Category        @relation(fields: [categoryId], references: [id])
   categoryId  String
   inventory   InventoryItem[]
+  salesOrderItems SalesOrderItem[]
+  invoiceItems    InvoiceItem[]
 }
 
 model InventoryItem {
@@ -120,6 +125,80 @@ model StockMovement {
   warehouseId String
 }
 
+// Sales Models
+model Customer {
+  id              String       @id @default(cuid())
+  name            String
+  email           String?      @unique
+  phone           String?
+  billingAddress  String?
+  shippingAddress String?
+  company         Company      @relation(fields: [companyId], references: [id])
+  companyId       String
+  salesOrders     SalesOrder[]
+  invoices        Invoice[]
+}
+
+enum OrderStatus {
+  DRAFT
+  SENT
+  CONFIRMED
+  CANCELLED
+}
+
+model SalesOrder {
+  id         String        @id @default(cuid())
+  orderDate  DateTime
+  status     OrderStatus   @default(DRAFT)
+  total      Float
+  company    Company       @relation(fields: [companyId], references: [id])
+  companyId  String
+  customer   Customer      @relation(fields: [customerId], references: [id])
+  customerId String
+  items      SalesOrderItem[]
+}
+
+model SalesOrderItem {
+  id           String     @id @default(cuid())
+  quantity     Int
+  unitPrice    Float
+  total        Float
+  salesOrder   SalesOrder @relation(fields: [salesOrderId], references: [id])
+  salesOrderId String
+  product      Product    @relation(fields: [productId], references: [id])
+  productId    String
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  VOID
+}
+
+model Invoice {
+  id          String        @id @default(cuid())
+  invoiceDate DateTime
+  dueDate     DateTime
+  status      InvoiceStatus @default(DRAFT)
+  total       Float
+  company     Company       @relation(fields: [companyId], references: [id])
+  companyId   String
+  customer    Customer      @relation(fields: [customerId], references: [id])
+  customerId  String
+  items       InvoiceItem[]
+}
+
+model InvoiceItem {
+  id        String  @id @default(cuid())
+  quantity  Int
+  unitPrice Float
+  total     Float
+  invoice   Invoice @relation(fields: [invoiceId], references: [id])
+  invoiceId String
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+}
 
 // NextAuth.js Models
 model Account {
