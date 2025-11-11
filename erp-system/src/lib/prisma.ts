@@ -24,7 +24,7 @@ export async function getPrismaClient() {
       $allModels: {
         async $allOperations({ model, operation, args }) {
           const modelsWithCompanyId = [
-            'User', 'Department', 'Product', 'Customer', 'SalesOrder', 'PurchaseOrder', 'InventoryItem'
+            'User', 'Department', 'Product', 'Customer', 'SalesOrder', 'PurchaseOrder', 'InventoryItem', 'Category', 'Warehouse'
           ];
 
           if (modelsWithCompanyId.includes(model)) {
