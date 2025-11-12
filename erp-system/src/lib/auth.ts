@@ -67,11 +67,3 @@ export const {
   signIn,
   signOut,
 } = NextAuth(authConfig);
-
-export const getCompanyId = async (): Promise<string | null> => {
-  const session = await auth();
-  if (session?.user?.companyId) {
-    return session.user.companyId;
-  }
-  return null;
-};
