@@ -4,7 +4,7 @@ import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
-import { JournalType } from '@prisma/client';
+import { JournalType, FiscalPeriodStatus } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 
 // Zod schema for a single journal line
@@ -81,9 +81,27 @@ export async function createJournalEntry(prevState: any, formData: FormData) {
   const totalDebits = lines.reduce((sum, line) => sum + line.debit, 0);
   const totalCredits = lines.reduce((sum, line) => sum + line.credit, 0);
 
-  if (totalDebits !== totalCredits) {
+  if (Math.abs(totalDebits - totalCredits) > 0.001) { // Use a tolerance for float comparison
     return { message: 'Total debits must equal total credits.' };
   }
+
+  // Locked Period Validation
+  const fiscalPeriod = await prisma.fiscalPeriod.findFirst({
+      where: {
+          companyId,
+          startDate: { lte: date },
+          endDate: { gte: date },
+      },
+  });
+
+  if (!fiscalPeriod) {
+      return { message: 'The transaction date is not within any open fiscal period.' };
+  }
+
+  if (fiscalPeriod.status === FiscalPeriodStatus.CLOSED) {
+      return { message: `Cannot post transaction: Fiscal period ${fiscalPeriod.period}/${fiscalPeriod.year} is closed.` };
+  }
+
 
   try {
     await prisma.$transaction(async (tx) => {
