@@ -11,15 +11,20 @@ datasource db {
 }
 
 model Company {
-  id           String       @id @default(cuid())
-  name         String
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  users        User[]
-  departments  Department[]
-  categories   Category[]
-  warehouses   Warehouse[]
-  products     Product[]
+  id            String        @id @default(cuid())
+  name          String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  users         User[]
+  departments   Department[]
+  categories    Category[]
+  warehouses    Warehouse[]
+  products      Product[]
+  // GL Models
+  accounts      Account[]
+  costCenters   CostCenter[]
+  fiscalPeriods FiscalPeriod[]
+  journals      Journal[]
 }
 
 enum UserRole {
@@ -43,7 +48,7 @@ model User {
   companyId     String?
   department    Department?  @relation(fields: [departmentId], references: [id])
   departmentId  String?
-  accounts      Account[]
+  authAccounts  AuthAccount[] // Renamed from accounts
   sessions      Session[]
 }
 
@@ -111,18 +116,123 @@ enum StockMovementType {
 }
 
 model StockMovement {
-  id        String            @id @default(cuid())
-  quantity  Int
-  type      StockMovementType
-  reason    String?
-  createdAt DateTime          @default(now())
-  productId String
+  id          String            @id @default(cuid())
+  quantity    Int
+  type        StockMovementType
+  reason      String?
+  createdAt   DateTime          @default(now())
+  productId   String
   warehouseId String
+}
+
+// General Ledger (GL) Models
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  INCOME
+  EXPENSE
+}
+
+model Account {
+  id                 String        @id @default(cuid())
+  company            Company       @relation(fields: [companyId], references: [id])
+  companyId          String
+  code               String
+  name               String
+  type               AccountType
+  currency           String
+  postingAllowed     Boolean       @default(true)
+  reconciliation     Boolean       @default(false)
+  costCenterRequired Boolean       @default(false)
+  parent             Account?      @relation("AccountHierarchy", fields: [parentId], references: [id])
+  parentId           String?
+  children           Account[]     @relation("AccountHierarchy")
+  journalLines       JournalLine[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@unique([companyId, code])
+}
+
+model CostCenter {
+  id           String        @id @default(cuid())
+  company      Company       @relation(fields: [companyId], references: [id])
+  companyId    String
+  code         String
+  name         String
+  parent       CostCenter?   @relation("CostCenterHierarchy", fields: [parentId], references: [id])
+  parentId     String?
+  children     CostCenter[]  @relation("CostCenterHierarchy")
+  journalLines JournalLine[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([companyId, code])
+}
+
+enum FiscalPeriodStatus {
+  OPEN
+  CLOSED
+}
+
+model FiscalPeriod {
+  id        String             @id @default(cuid())
+  company   Company            @relation(fields: [companyId], references: [id])
+  companyId String
+  year      Int
+  period    Int
+  startDate DateTime
+  endDate   DateTime
+  status    FiscalPeriodStatus @default(OPEN)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@unique([companyId, year, period])
+}
+
+enum JournalType {
+  GENERAL
+  ACCRUAL
+  ADJUSTMENT
+}
+
+model Journal {
+  id           String      @id @default(cuid())
+  company      Company     @relation(fields: [companyId], references: [id])
+  companyId    String
+  date         DateTime
+  type         JournalType
+  reference    String?
+  currency     String
+  fxRate       Float?
+  preparedById String
+  approvedById String?
+  lines        JournalLine[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model JournalLine {
+  id           String      @id @default(cuid())
+  journal      Journal     @relation(fields: [journalId], references: [id])
+  journalId    String
+  account      Account     @relation(fields: [accountId], references: [id])
+  accountId    String
+  description  String
+  debit        Float
+  credit       Float
+  costCenter   CostCenter? @relation(fields: [costCenterId], references: [id])
+  costCenterId String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }
 
 
 // NextAuth.js Models
-model Account {
+// Renamed from Account to AuthAccount
+model AuthAccount {
   id                String  @id @default(cuid())
   userId            String
   type              String
