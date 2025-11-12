@@ -9,6 +9,7 @@ import {
   FilePen,
   ChevronDown,
   Building,
+  Calendar,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -33,6 +34,11 @@ const navLinks = [
         title: 'Cost Centers',
         icon: Building,
         href: '/dashboard/gl/cost-centers',
+      },
+      {
+        title: 'Fiscal Periods',
+        icon: Calendar,
+        href: '/dashboard/gl/fiscal-periods',
       },
     ],
   },
