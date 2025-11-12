@@ -10,6 +10,7 @@ import {
   ChevronDown,
   Building,
   Calendar,
+  BookText,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -25,6 +26,11 @@ const navLinks = [
     title: 'Finance',
     icon: Landmark,
     subLinks: [
+      {
+        title: 'Journal Entries',
+        icon: BookText,
+        href: '/dashboard/gl/journal-entries',
+      },
       {
         title: 'Chart of Accounts',
         icon: FilePen,
@@ -61,7 +67,7 @@ const navLinks = [
 
 export default function NavLinks() {
   const pathname = usePathname();
-  const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
+  const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({Finance: true});
 
   const toggleMenu = (title: string) => {
     setOpenMenus((prev) => ({ ...prev, [title]: !prev[title] }));
