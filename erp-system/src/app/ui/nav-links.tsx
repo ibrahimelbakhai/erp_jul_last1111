@@ -8,6 +8,7 @@ import {
   Landmark,
   FilePen,
   ChevronDown,
+  Building,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -27,6 +28,11 @@ const navLinks = [
         title: 'Chart of Accounts',
         icon: FilePen,
         href: '/dashboard/gl/chart-of-accounts',
+      },
+      {
+        title: 'Cost Centers',
+        icon: Building,
+        href: '/dashboard/gl/cost-centers',
       },
     ],
   },
