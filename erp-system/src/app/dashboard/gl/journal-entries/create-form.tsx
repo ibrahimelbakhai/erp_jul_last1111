@@ -2,7 +2,7 @@
 
 import { useFormState } from 'react-dom';
 import { createJournalEntry } from '@/app/dashboard/gl/journal-entries/actions';
-import { Account, CostCenter, JournalType } from '@prisma/client';
+import { GLAccount, CostCenter, JournalType } from '@prisma/client';
 import { Button } from '@/app/ui/button';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
@@ -21,7 +21,7 @@ export default function CreateJournalEntryForm({
   accounts,
   costCenters,
 }: {
-  accounts: Partial<Account>[];
+  accounts: Partial<GLAccount>[];
   costCenters: Partial<CostCenter>[];
 }) {
   const initialState = { message: null, errors: {} };

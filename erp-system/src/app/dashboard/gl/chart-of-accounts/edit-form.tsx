@@ -8,14 +8,14 @@ import {
 import Link from 'next/link';
 import { Button } from '@/app/ui/button';
 import { updateAccount } from '@/app/dashboard/gl/chart-of-accounts/actions';
-import { Account, AccountType } from '@prisma/client';
+import { GLAccount, AccountType } from '@prisma/client';
 
 export default function EditAccountForm({
   account,
   accounts,
 }: {
-  account: Account;
-  accounts: Account[];
+  account: GLAccount;
+  accounts: GLAccount[];
 }) {
   const initialState = { message: null, errors: {} };
   const updateAccountWithId = updateAccount.bind(null, account.id);

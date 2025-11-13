@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import prisma from '@/lib/prisma';
+import { getPrismaClient } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { FiscalPeriodStatus } from '@prisma/client';
@@ -15,8 +15,7 @@ const fiscalYearSchema = z.object({
 async function getCompanyId() {
   const session = await auth();
   if (!session?.user?.companyId) {
-    // This is a fallback for verification scripts, in a real app you'd throw an error.
-    return 'clyc0w7b0000008l8g2f3h9j9';
+    throw new Error('User is not authenticated or does not have a company ID.');
   }
   return session.user.companyId;
 }
@@ -24,6 +23,7 @@ async function getCompanyId() {
 // Fetch all distinct fiscal years
 export async function getDistinctFiscalYears() {
   const companyId = await getCompanyId();
+  const prisma = getPrismaClient();
   try {
     const fiscalPeriods = await prisma.fiscalPeriod.findMany({
       where: { companyId },
@@ -40,6 +40,7 @@ export async function getDistinctFiscalYears() {
 // Fetch all fiscal periods for a given year
 export async function getFiscalPeriods(year: number) {
   const companyId = await getCompanyId();
+  const prisma = getPrismaClient();
   try {
     const fiscalPeriods = await prisma.fiscalPeriod.findMany({
       where: { companyId, year },
@@ -54,6 +55,7 @@ export async function getFiscalPeriods(year: number) {
 // Create a full fiscal year with 12 monthly periods
 export async function createFiscalYear(prevState: any, formData: FormData) {
   const companyId = await getCompanyId();
+  const prisma = getPrismaClient();
   const validatedFields = fiscalYearSchema.safeParse({
     year: formData.get('year'),
   });
@@ -102,6 +104,7 @@ export async function createFiscalYear(prevState: any, formData: FormData) {
 // Update the status of a fiscal period
 export async function updateFiscalPeriodStatus(id: string, status: FiscalPeriodStatus) {
   const companyId = await getCompanyId();
+  const prisma = getPrismaClient();
 
   if (!Object.values(FiscalPeriodStatus).includes(status)) {
       return { success: false, error: 'Invalid status provided.' };

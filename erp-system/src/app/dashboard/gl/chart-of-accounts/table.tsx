@@ -8,10 +8,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/app/ui/table';
-import { Account } from '@prisma/client';
+import { GLAccount } from '@prisma/client';
 import { UpdateAccount, DeleteAccount } from './buttons';
 
-export default function AccountsTable({ accounts }: { accounts: Account[] }) {
+export default function AccountsTable({ accounts }: { accounts: GLAccount[] }) {
   return (
     <div className="mt-6 flow-root">
       <div className="inline-block min-w-full align-middle">

@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import prisma from '@/lib/prisma';
+import { getPrismaClient } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { JournalType, FiscalPeriodStatus } from '@prisma/client';
@@ -30,21 +30,25 @@ const journalEntrySchema = z.object({
 });
 
 
-// Function to get the current user's company ID
-async function getCompanyId() {
+// Function to get the current user's session
+async function getUserSession() {
   const session = await auth();
-  if (!session?.user?.companyId) {
-    return 'clyc0w7b0000008l8g2f3h9j9'; // Fallback for verification
+  if (!session?.user) {
+    throw new Error('User is not authenticated.');
   }
-  return session.user.companyId;
+  if (!session.user.companyId) {
+      throw new Error('User is not associated with a company.');
+  }
+  return session.user as { id: string; companyId: string; };
 }
 
 // Fetch all journal entries
 export async function getJournalEntries() {
-  const companyId = await getCompanyId();
+  const user = await getUserSession();
+  const prisma = getPrismaClient();
   try {
     const journalEntries = await prisma.journal.findMany({
-      where: { companyId },
+      where: { companyId: user.companyId },
       include: { lines: true },
       orderBy: { date: 'desc' },
     });
@@ -56,7 +60,8 @@ export async function getJournalEntries() {
 
 // Create a new journal entry
 export async function createJournalEntry(prevState: any, formData: FormData) {
-  const companyId = await getCompanyId();
+  const user = await getUserSession();
+  const prisma = getPrismaClient();
 
   const rawData = {
     date: formData.get('date'),
@@ -88,7 +93,7 @@ export async function createJournalEntry(prevState: any, formData: FormData) {
   // Locked Period Validation
   const fiscalPeriod = await prisma.fiscalPeriod.findFirst({
       where: {
-          companyId,
+          companyId: user.companyId,
           startDate: { lte: date },
           endDate: { gte: date },
       },
@@ -107,13 +112,12 @@ export async function createJournalEntry(prevState: any, formData: FormData) {
     await prisma.$transaction(async (tx) => {
       const journal = await tx.journal.create({
         data: {
-          companyId,
+          companyId: user.companyId,
           date,
           type,
           reference,
           currency,
-          // TODO: Add preparedById and approvedById from session
-          preparedById: 'user_placeholder',
+          preparedById: user.id,
         },
       });
 
@@ -137,10 +141,11 @@ export async function createJournalEntry(prevState: any, formData: FormData) {
 
 // Helper actions to fetch data for form dropdowns
 export async function getAccountsForDropdown() {
-    const companyId = await getCompanyId();
+    const user = await getUserSession();
+    const prisma = getPrismaClient();
     try {
-        const accounts = await prisma.account.findMany({
-            where: { companyId, postingAllowed: true },
+        const accounts = await prisma.gLAccount.findMany({
+            where: { companyId: user.companyId, postingAllowed: true },
             orderBy: { code: 'asc' },
             select: { id: true, name: true, code: true }
         });
@@ -151,10 +156,11 @@ export async function getAccountsForDropdown() {
 }
 
 export async function getCostCentersForDropdown() {
-    const companyId = await getCompanyId();
+    const user = await getUserSession();
+    const prisma = getPrismaClient();
     try {
         const costCenters = await prisma.costCenter.findMany({
-            where: { companyId },
+            where: { companyId: user.companyId },
             orderBy: { code: 'asc' },
             select: { id: true, name: true, code: true }
         });

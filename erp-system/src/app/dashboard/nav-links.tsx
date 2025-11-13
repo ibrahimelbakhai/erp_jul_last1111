@@ -11,6 +11,7 @@ import {
   Building,
   Calendar,
   BookText,
+  ClipboardList,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -45,6 +46,11 @@ const navLinks = [
         title: 'Fiscal Periods',
         icon: Calendar,
         href: '/dashboard/gl/fiscal-periods',
+      },
+      {
+        title: 'Trial Balance',
+        icon: ClipboardList,
+        href: '/dashboard/gl/reports/trial-balance',
       },
     ],
   },

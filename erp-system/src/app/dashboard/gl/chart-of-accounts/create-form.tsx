@@ -8,9 +8,9 @@ import {
 import Link from 'next/link';
 import { Button } from '@/app/ui/button';
 import { createAccount } from '@/app/dashboard/gl/chart-of-accounts/actions';
-import { Account, AccountType } from '@prisma/client';
+import { GLAccount, AccountType } from '@prisma/client';
 
-export default function CreateAccountForm({ accounts }: { accounts: Account[] }) {
+export default function CreateAccountForm({ accounts }: { accounts: GLAccount[] }) {
   const initialState = { message: null, errors: {} };
   const [state, dispatch] = useFormState(createAccount, initialState);
 
