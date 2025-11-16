@@ -8,57 +8,31 @@ import {
   TableHeader,
   TableRow,
 } from '@/app/ui/table';
-import { GLAccount } from '@prisma/client';
-import { UpdateAccount, DeleteAccount } from './buttons';
+import { FiscalPeriod } from '@prisma/client';
+import { UpdateStatus } from './buttons';
+import { formatDate } from '@/lib/utils';
+import { Badge } from '@/app/ui/badge';
 
-export default function AccountsTable({ accounts }: { accounts: GLAccount[] }) {
+
+export default function FiscalPeriodsTable({ fiscalPeriods }: { fiscalPeriods: FiscalPeriod[] }) {
   return (
     <div className="mt-6 flow-root">
       <div className="inline-block min-w-full align-middle">
         <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
-          <div className="md:hidden">
-            {accounts?.map((account) => (
-              <div
-                key={account.id}
-                className="mb-2 w-full rounded-md bg-white p-4"
-              >
-                <div className="flex items-center justify-between border-b pb-4">
-                  <div>
-                    <div className="mb-2 flex items-center">
-                      <p>{account.code}</p>
-                    </div>
-                    <p className="text-sm text-gray-500">{account.name}</p>
-                  </div>
-                </div>
-                <div className="flex w-full items-center justify-between pt-4">
-                  <div>
-                    <p className="text-xl font-medium">
-                      {account.type}
-                    </p>
-                    <p>{account.currency}</p>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <UpdateAccount id={account.id} />
-                    <DeleteAccount id={account.id} />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
           <Table className="hidden min-w-full text-gray-900 md:table">
             <TableHeader className="rounded-lg text-left text-sm font-normal">
               <TableRow>
                 <TableHead scope="col" className="px-4 py-5 font-medium sm:pl-6">
-                  Code
+                  Period
                 </TableHead>
                 <TableHead scope="col" className="px-3 py-5 font-medium">
-                  Name
+                  Start Date
                 </TableHead>
                 <TableHead scope="col" className="px-3 py-5 font-medium">
-                  Type
+                  End Date
                 </TableHead>
                 <TableHead scope="col" className="px-3 py-5 font-medium">
-                  Currency
+                  Status
                 </TableHead>
                 <TableHead scope="col" className="relative py-3 pl-6 pr-3">
                   <span className="sr-only">Edit</span>
@@ -66,27 +40,28 @@ export default function AccountsTable({ accounts }: { accounts: GLAccount[] }) {
               </TableRow>
             </TableHeader>
             <TableBody className="bg-white">
-              {accounts?.map((account) => (
+              {fiscalPeriods?.map((period) => (
                 <TableRow
-                  key={account.id}
+                  key={period.id}
                   className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
                 >
                   <TableCell className="whitespace-nowrap py-3 pl-6 pr-3">
-                    {account.code}
+                    {period.period}
                   </TableCell>
                   <TableCell className="whitespace-nowrap px-3 py-3">
-                    {account.name}
+                    {formatDate(period.startDate)}
                   </TableCell>
                   <TableCell className="whitespace-nowrap px-3 py-3">
-                    {account.type}
+                    {formatDate(period.endDate)}
                   </TableCell>
                   <TableCell className="whitespace-nowrap px-3 py-3">
-                    {account.currency}
+                  <Badge variant={period.status === 'OPEN' ? 'success' : 'destructive'}>
+                    {period.status}
+                    </Badge>
                   </TableCell>
                   <TableCell className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">
-                      <UpdateAccount id={account.id} />
-                      <DeleteAccount id={account.id} />
+                      <UpdateStatus id={period.id} currentStatus={period.status} />
                     </div>
                   </TableCell>
                 </TableRow>

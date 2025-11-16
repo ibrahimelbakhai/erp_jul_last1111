@@ -21,7 +21,7 @@ model Company {
   warehouses    Warehouse[]
   products      Product[]
   // GL Models
-  accounts      Account[]
+  accounts      GLAccount[]
   costCenters   CostCenter[]
   fiscalPeriods FiscalPeriod[]
   journals      Journal[]
@@ -48,7 +48,7 @@ model User {
   companyId     String?
   department    Department?  @relation(fields: [departmentId], references: [id])
   departmentId  String?
-  authAccounts  AuthAccount[] // Renamed from accounts
+  accounts      Account[]
   sessions      Session[]
 }
 
@@ -135,7 +135,7 @@ enum AccountType {
   EXPENSE
 }
 
-model Account {
+model GLAccount {
   id                 String        @id @default(cuid())
   company            Company       @relation(fields: [companyId], references: [id])
   companyId          String
@@ -146,9 +146,9 @@ model Account {
   postingAllowed     Boolean       @default(true)
   reconciliation     Boolean       @default(false)
   costCenterRequired Boolean       @default(false)
-  parent             Account?      @relation("AccountHierarchy", fields: [parentId], references: [id])
+  parent             GLAccount?      @relation("AccountHierarchy", fields: [parentId], references: [id])
   parentId           String?
-  children           Account[]     @relation("AccountHierarchy")
+  children           GLAccount[]     @relation("AccountHierarchy")
   journalLines       JournalLine[]
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
@@ -218,7 +218,7 @@ model JournalLine {
   id           String      @id @default(cuid())
   journal      Journal     @relation(fields: [journalId], references: [id])
   journalId    String
-  account      Account     @relation(fields: [accountId], references: [id])
+  account      GLAccount     @relation(fields: [accountId], references: [id])
   accountId    String
   description  String
   debit        Float
@@ -231,8 +231,7 @@ model JournalLine {
 
 
 // NextAuth.js Models
-// Renamed from Account to AuthAccount
-model AuthAccount {
+model Account {
   id                String  @id @default(cuid())
   userId            String
   type              String

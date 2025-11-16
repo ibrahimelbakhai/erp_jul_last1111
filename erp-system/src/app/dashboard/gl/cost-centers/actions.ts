@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import prisma from '@/lib/prisma';
+import { getPrismaClient } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
@@ -17,9 +17,7 @@ const costCenterSchema = z.object({
 async function getCompanyId() {
   const session = await auth();
   if (!session?.user?.companyId) {
-    // For verification purposes, we'll use a default company ID.
-    // In a real application, you would throw an error here.
-    return 'clyc0w7b0000008l8g2f3h9j9';
+    throw new Error('User is not authenticated or does not have a company ID.');
   }
   return session.user.companyId;
 }
@@ -27,6 +25,7 @@ async function getCompanyId() {
 // Fetch all cost centers
 export async function getCostCenters() {
   const companyId = await getCompanyId();
+  const prisma = getPrismaClient();
   try {
     const costCenters = await prisma.costCenter.findMany({
       where: { companyId },
@@ -41,6 +40,7 @@ export async function getCostCenters() {
 // Create a new cost center
 export async function createCostCenter(formData: FormData) {
   const companyId = await getCompanyId();
+  const prisma = getPrismaClient();
   const validatedFields = costCenterSchema.safeParse(Object.fromEntries(formData.entries()));
 
   if (!validatedFields.success) {
@@ -72,6 +72,7 @@ export async function createCostCenter(formData: FormData) {
 // Update an existing cost center
 export async function updateCostCenter(formData: FormData) {
   const companyId = await getCompanyId();
+  const prisma = getPrismaClient();
   const validatedFields = costCenterSchema.safeParse(Object.fromEntries(formData.entries()));
 
   if (!validatedFields.success) {
@@ -107,6 +108,7 @@ export async function updateCostCenter(formData: FormData) {
 // Delete a cost center
 export async function deleteCostCenter(id: string) {
   const companyId = await getCompanyId();
+  const prisma = getPrismaClient();
   try {
     await prisma.costCenter.delete({
       where: { id, companyId },

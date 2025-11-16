@@ -1,4 +1,4 @@
-import { Account, AccountType } from '@prisma/client';
+import { GLAccount, AccountType } from '@prisma/client';
 
 export type ChartOfAccountsTable = {
   id: string;
@@ -6,7 +6,7 @@ export type ChartOfAccountsTable = {
   name: string;
   type: AccountType;
   currency: string;
-  parent?: Account | null;
+  parent?: GLAccount | null;
   parentId?: string | null;
-  children: Account[];
+  children: GLAccount[];
 };

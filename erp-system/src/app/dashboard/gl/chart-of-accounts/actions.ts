@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import prisma from '@/lib/prisma';
+import { getPrismaClient } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { AccountType } from '@prisma/client';
@@ -20,9 +20,7 @@ const accountSchema = z.object({
 async function getCompanyId() {
   const session = await auth();
   if (!session?.user?.companyId) {
-    // For verification purposes, we'll use a default company ID.
-    // In a real application, you would throw an error here.
-    return 'clyc0w7b0000008l8g2f3h9j9';
+    throw new Error('User is not authenticated or does not have a company ID.');
   }
   return session.user.companyId;
 }
@@ -30,8 +28,9 @@ async function getCompanyId() {
 // Fetch all accounts
 export async function getAccounts() {
   const companyId = await getCompanyId();
+  const prisma = getPrismaClient();
   try {
-    const accounts = await prisma.account.findMany({
+    const accounts = await prisma.gLAccount.findMany({
       where: { companyId },
       orderBy: { code: 'asc' },
     });
@@ -44,6 +43,7 @@ export async function getAccounts() {
 // Create a new account
 export async function createAccount(formData: FormData) {
   const companyId = await getCompanyId();
+  const prisma = getPrismaClient();
   const validatedFields = accountSchema.safeParse(Object.fromEntries(formData.entries()));
 
   if (!validatedFields.success) {
@@ -57,7 +57,7 @@ export async function createAccount(formData: FormData) {
   const { code, name, type, currency, parentId } = validatedFields.data;
 
   try {
-    await prisma.account.create({
+    await prisma.gLAccount.create({
       data: {
         companyId,
         code,
@@ -77,6 +77,7 @@ export async function createAccount(formData: FormData) {
 // Update an existing account
 export async function updateAccount(formData: FormData) {
   const companyId = await getCompanyId();
+  const prisma = getPrismaClient();
   const validatedFields = accountSchema.safeParse(Object.fromEntries(formData.entries()));
 
   if (!validatedFields.success) {
@@ -94,7 +95,7 @@ export async function updateAccount(formData: FormData) {
   }
 
   try {
-    await prisma.account.update({
+    await prisma.gLAccount.update({
       where: { id, companyId },
       data: {
         code,
@@ -114,8 +115,9 @@ export async function updateAccount(formData: FormData) {
 // Delete an account
 export async function deleteAccount(id: string) {
   const companyId = await getCompanyId();
+  const prisma = getPrismaClient();
   try {
-    await prisma.account.delete({
+    await prisma.gLAccount.delete({
       where: { id, companyId },
     });
     revalidatePath('/dashboard/gl/chart-of-accounts');
